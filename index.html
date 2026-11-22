@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulación Lliga Catalana Or · Fase Títol y Permanència</title>
+<style>
+  :root {
+    --fondo: #f4f5f7; --tarjeta: #fff; --texto: #1d2330; --suave: #6b7280; --linea: #e5e7eb;
+    --acento: #1f3a8a;
+    --oro: #f6d365; --oro-borde: #c9a227;
+    --plata: #e3e6ea; --plata-borde: #9aa3ad;
+    --rojo: #fbd5d5; --rojo-borde: #d64545;
+    --naranja: #fde3c2; --naranja-borde: #e8891c;
+  }
+  * { box-sizing: border-box }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--fondo); color: var(--texto); line-height: 1.4 }
+  header { background: var(--acento); color: #fff; padding: 22px 16px 18px }
+  header .in, main { max-width: 980px; margin: 0 auto }
+  h1 { margin: 0 0 4px; font-size: 1.45rem }
+  header p { margin: 0; opacity: .85; font-size: .92rem }
+  main { padding: 18px 12px 40px }
+  section.tarjeta { background: var(--tarjeta); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 16px; margin-bottom: 20px }
+  h2 { margin: 0 0 4px; font-size: 1.2rem }
+  h3 { margin: 18px 0 8px; font-size: 1rem }
+  .sub { color: var(--suave); font-size: .88rem; margin: 0 0 12px }
+  .scroll { overflow-x: auto }
+  table { width: 100%; border-collapse: collapse; font-size: .92rem }
+  th, td { padding: 7px 6px; text-align: center; white-space: nowrap }
+  th { font-size: .75rem; text-transform: uppercase; letter-spacing: .03em; color: var(--suave); border-bottom: 2px solid var(--linea) }
+  td { border-bottom: 1px solid var(--linea) }
+  td.eq, th.eq { text-align: left; white-space: normal; min-width: 170px }
+  td.pts { font-weight: 700; font-size: 1rem }
+  td.pos { font-weight: 700; width: 34px; border-left: 5px solid transparent }
+  .orig { display: inline-block; min-width: 30px; padding: 1px 6px; border-radius: 6px; font-size: .75rem; font-weight: 600; background: #eef2ff; color: var(--acento) }
+  .orig.B { background: #ecfdf5; color: #047857 }
+  tr.oro td { background: var(--oro) } tr.oro td.pos { border-left-color: var(--oro-borde) }
+  tr.plata td { background: var(--plata) } tr.plata td.pos { border-left-color: var(--plata-borde) }
+  tr.rojo td { background: var(--rojo) } tr.rojo td.pos { border-left-color: var(--rojo-borde) }
+  tr.naranja td { background: var(--naranja) } tr.naranja td.pos { border-left-color: var(--naranja-borde) }
+  tr.zona-titol td.pos { border-left-color: var(--acento) }
+  tr.corte td { border-bottom: 2px dashed var(--suave) }
+  .leyenda { display: flex; flex-wrap: wrap; gap: 12px; font-size: .82rem; color: var(--suave); margin-top: 10px }
+  .leyenda span::before { content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 5px; vertical-align: -2px; border: 1px solid rgba(0,0,0,.15) }
+  .l-oro::before { background: var(--oro) } .l-plata::before { background: var(--plata) }
+  .l-rojo::before { background: var(--rojo) } .l-naranja::before { background: var(--naranja) }
+  .l-titol::before { background: var(--acento) }
+  .partidos { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 8px }
+  .partido { border: 1px solid var(--linea); border-radius: 10px; padding: 8px 10px; font-size: .88rem }
+  .partido .meta { color: var(--suave); font-size: .76rem; margin-bottom: 3px; display: flex; justify-content: space-between; gap: 8px }
+  .partido .vs { display: grid; grid-template-columns: 1fr auto 1fr; gap: 6px; align-items: center }
+  .partido .vs b:last-child { text-align: right }
+  .partido .x { color: var(--suave); font-size: .78rem }
+  .vacio { color: var(--suave); font-style: italic; font-size: .9rem }
+  .grupos { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 20px }
+  @media (max-width: 520px) { .grupos { grid-template-columns: 1fr } th, td { padding: 6px 4px } td.eq, th.eq { min-width: 140px } .ocultable { display: none } }
+  .nota { font-size: .84rem; color: var(--suave) }
+  .nota ul { margin: 6px 0 0; padding-left: 18px }
+  #error { display: none; background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 10px; margin-bottom: 16px }
+  footer { text-align: center; font-size: .8rem; color: var(--suave); padding-bottom: 30px }
+  footer a { color: var(--acento) }
+</style>
+</head>
+<body>
+<header><div class="in">
+  <h1>Lliga Catalana Or Sènior Masculina</h1>
+  <p>Simulación provisional de la segunda fase: cómo quedarían la Fase Títol y la Fase Permanència si la Primera Fase acabara hoy.</p>
+  <p id="actualizado" style="margin-top:6px"></p>
+</div></header>
+
+<main>
+  <div id="error"></div>
+
+  <section class="tarjeta">
+    <h2>🏆 Fase Títol (provisional)</h2>
+    <p class="sub">Los 4 primeros del Grup A y del Grup B, con los puntos arrastrados de los partidos entre ellos. «Orig.» es el grupo y la posición actual en la Primera Fase.</p>
+    <div class="scroll"><table id="t-titol"></table></div>
+    <div class="leyenda"><span class="l-oro">1.º</span><span class="l-plata">2.º</span></div>
+    <h3>Partidos pendientes de la Primera Fase entre estos equipos</h3>
+    <p class="sub">Todavía sumarán a los puntos arrastrados.</p>
+    <div id="p-titol"></div>
+  </section>
+
+  <section class="tarjeta">
+    <h2>🛟 Fase Permanència (provisional)</h2>
+    <p class="sub">Del 5.º al 9.º del Grup A y del 5.º al 8.º del Grup B, con los puntos arrastrados de los partidos entre ellos.</p>
+    <div class="scroll"><table id="t-perm"></table></div>
+    <div class="leyenda"><span class="l-naranja">Los 2 anteriores a los 3 últimos</span><span class="l-rojo">Últimos 3</span></div>
+    <h3>Partidos pendientes de la Primera Fase entre estos equipos</h3>
+    <p class="sub">Todavía sumarán a los puntos arrastrados.</p>
+    <div id="p-perm"></div>
+  </section>
+
+  <section class="tarjeta">
+    <h2>Primera Fase · clasificación actual</h2>
+    <p class="sub">La línea discontinua separa los que irían a Fase Títol de los que irían a Fase Permanència.</p>
+    <div class="grupos" id="grupos"></div>
+    <div class="leyenda"><span class="l-titol">Plaza de Fase Títol</span></div>
+  </section>
+
+  <section class="tarjeta nota">
+    <b>Cómo se calcula</b>
+    <ul>
+      <li>Victoria 2 puntos, empate 1, derrota 0.</li>
+      <li>Pasan a Fase Títol los 4 primeros de cada grupo; el resto va a Fase Permanència.</li>
+      <li>Cada equipo arrastra solo los resultados contra los equipos de su grupo que pasan a su misma fase.</li>
+      <li>Desempate a puntos: si los empatados ya han jugado todos sus partidos entre ellos, cuenta el enfrentamiento directo (puntos, diferencia y goles a favor); si no, la diferencia de goles general y luego los goles a favor. Así coincide con la clasificación oficial de iSQUAD.</li>
+      <li>Es provisional: los equipos no han jugado todos el mismo número de partidos.</li>
+    </ul>
+  </section>
+</main>
+
+<footer>Datos: <a href="https://resultadosbalonmano.isquad.es/maqueta/#v=jornada&s=1&se=0&temp=2627&t=17&am=0&cat=3077&comp=211864" target="_blank" rel="noopener">resultados de la FCH en iSQUAD</a> · se actualizan automáticamente cada 3 horas.</footer>
+
+<script type="module">
+import { calcular, nombre } from './liga.js';
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const dg = n => (n > 0 ? '+' : '') + n;
+
+const DIAS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+function fechaBonita(f) {
+  if (!f) return 'Sin fecha';
+  const [d, h] = String(f).split(' ');
+  const [a, m, di] = d.split('-').map(Number);
+  const dt = new Date(a, m - 1, di);
+  let s = `${DIAS[dt.getDay()]} ${di} ${MESES[m - 1]} ${a}`;
+  if (h && h !== '00:00:00') s += ` · ${h.slice(0, 5)}`;
+  return s;
+}
+
+function tabla(el, filas, datos, { clase, origen = true }) {
+  el.innerHTML = `<thead><tr><th>#</th><th class="eq">Equipo</th>${origen ? '<th>Orig.</th>' : ''}<th>PJ</th><th>G</th><th>E</th><th>P</th><th class="ocultable">GF</th><th class="ocultable">GC</th><th>DG</th><th>Pts</th></tr></thead><tbody>${
+    filas.map((f, i) => `<tr class="${clase(f, i, filas.length)}"><td class="pos">${f.pos}</td><td class="eq">${esc(nombre(datos, f.id))}</td>${
+      origen ? `<td><span class="orig ${f.grupo}">${f.grupo}${f.posGrupo}</span></td>` : ''
+    }<td>${f.pj}</td><td>${f.g}</td><td>${f.e}</td><td>${f.p}</td><td class="ocultable">${f.gf}</td><td class="ocultable">${f.gc}</td><td>${dg(f.dg)}</td><td class="pts">${f.pts}</td></tr>`).join('')
+  }</tbody>`;
+}
+
+function pendientes(el, lista, datos) {
+  if (!lista.length) { el.innerHTML = '<p class="vacio">No queda ninguno: los puntos arrastrados ya son definitivos.</p>'; return }
+  const porGrupo = ['A', 'B'].map(g => [g, lista.filter(m => m.grupo === g)]).filter(([, l]) => l.length);
+  el.innerHTML = porGrupo.map(([g, l]) => `<h3>Grup ${g} · ${l.length} partido${l.length > 1 ? 's' : ''}</h3><div class="partidos">${
+    l.map(m => `<div class="partido"><div class="meta"><span>Jornada ${m.j}</span><span>${fechaBonita(m.fecha)}</span></div><div class="vs"><b>${esc(nombre(datos, m.l))}</b><span class="x">vs</span><b>${esc(nombre(datos, m.v))}</b></div></div>`).join('')
+  }</div>`).join('');
+}
+
+async function iniciar() {
+  try {
+    const r = await fetch(`data/partidos.json?t=${Date.now()}`, { cache: 'no-store' });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const datos = await r.json();
+    const res = calcular(datos);
+
+    const act = new Date(datos.actualizado);
+    $('#actualizado').textContent = `Datos actualizados: ${act.toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Europe/Madrid' })} · ` +
+      res.grupos.map(g => `${g.nombre}: ${g.jugados}/${g.total} partidos jugados`).join(' · ');
+
+    tabla($('#t-titol'), res.titol.tabla, datos, { clase: (f, i) => i === 0 ? 'oro' : i === 1 ? 'plata' : '' });
+    tabla($('#t-perm'), res.permanencia.tabla, datos, { clase: (f, i, n) => i >= n - 3 ? 'rojo' : i >= n - 5 ? 'naranja' : '' });
+    pendientes($('#p-titol'), res.titol.pendientes, datos);
+    pendientes($('#p-perm'), res.permanencia.pendientes, datos);
+
+    $('#grupos').innerHTML = res.grupos.map(g => `<div><h3>${esc(g.nombre)} <span class="sub">· ${g.jugados}/${g.total} jugados</span></h3><div class="scroll"><table id="g-${g.letra}"></table></div></div>`).join('');
+    for (const g of res.grupos)
+      tabla($(`#g-${g.letra}`), g.tabla, datos, { origen: false, clase: f => (f.pos <= 4 ? 'zona-titol' : '') + (f.pos === 4 ? ' corte' : '') });
+  } catch (e) {
+    $('#error').style.display = 'block';
+    $('#error').textContent = 'No he podido cargar los datos (' + e.message + ').';
+    console.error(e);
+  }
+}
+iniciar();
+</script>
+</body>
+</html>
