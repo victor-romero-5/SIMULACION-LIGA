@@ -142,10 +142,10 @@ function fechaBonita(f) {
 }
 
 function tabla(el, filas, datos, { clase, origen = true, check = null }) {
-  el.innerHTML = `<thead><tr>${check ? '<th>Títol</th>' : ''}<th>#</th><th class="eq">Equipo</th>${origen ? '<th>Orig.</th>' : ''}<th>PJ</th><th>G</th><th>E</th><th>P</th><th class="ocultable">GF</th><th class="ocultable">GC</th><th>DG</th><th>Pts</th></tr></thead><tbody>${
+  el.innerHTML = `<thead><tr>${check ? '<th>Títol</th>' : ''}<th>#</th><th class="eq">Equipo</th>${origen ? '<th>Orig.</th>' : ''}<th>Pts</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th class="ocultable">GF</th><th class="ocultable">GC</th><th>DG</th></tr></thead><tbody>${
     filas.map((f, i) => `<tr class="${clase(f, i, filas.length)}">${check ? `<td>${check(f)}</td>` : ''}<td class="pos">${f.pos}</td><td class="eq">${esc(nombre(datos, f.id))}</td>${
       origen ? `<td><span class="orig ${f.grupo}">${f.grupo}${f.posGrupo}</span></td>` : ''
-    }<td>${f.pj}</td><td>${f.g}</td><td>${f.e}</td><td>${f.p}</td><td class="ocultable">${f.gf}</td><td class="ocultable">${f.gc}</td><td>${dg(f.dg)}</td><td class="pts">${f.pts}</td></tr>`).join('')
+    }<td class="pts">${f.pts}</td><td>${f.pj}</td><td>${f.g}</td><td>${f.e}</td><td>${f.p}</td><td class="ocultable">${f.gf}</td><td class="ocultable">${f.gc}</td><td>${dg(f.dg)}</td></tr>`).join('')
   }</tbody>`;
 }
 
