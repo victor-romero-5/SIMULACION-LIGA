@@ -102,8 +102,10 @@ export function equiposDe(partidos) {
   return [...s];
 }
 
-// Todo lo que pinta la web a partir de data/partidos.json
-export function calcular(datos) {
+// Todo lo que pinta la web a partir de data/partidos.json.
+// `seleccion` (opcional): { A: [ids], B: [ids] } con los equipos que van a Fase Títol de cada grupo.
+// Si falta un grupo, van los 4 primeros de su clasificación.
+export function calcular(datos, seleccion = {}) {
   const nom = id => nombre(datos, id);
   const grupos = datos.grupos.map(g => {
     const partidos = partidosDe(g);
@@ -115,10 +117,15 @@ export function calcular(datos) {
     return { nombre: g.nombre, letra, jornadas: g.jornadas, partidos, tabla, jugados, total: partidos.length };
   });
 
-  const fase = (elegir) => {
+  for (const g of grupos) {
+    const elegidos = seleccion[g.letra];
+    g.titol = new Set(elegidos && elegidos.length ? elegidos : g.tabla.filter(f => f.pos <= PLAZAS_TITOL).map(f => f.id));
+  }
+
+  const fase = (vaATitol) => {
     const filas = [], pendientes = [], arrastrados = [];
     for (const g of grupos) {
-      const ids = g.tabla.filter(elegir).map(f => f.id);
+      const ids = g.tabla.filter(f => g.titol.has(f.id) === vaATitol).map(f => f.id);
       const posPrimera = new Map(g.tabla.map(f => [f.id, f.pos]));
       for (const f of acumular(ids, g.partidos).values())
         filas.push({ ...f, grupo: g.letra, posGrupo: posPrimera.get(f.id) });
@@ -135,7 +142,7 @@ export function calcular(datos) {
     return { tabla, pendientes, arrastrados };
   };
 
-  const titol = fase(f => f.pos <= PLAZAS_TITOL);
-  const permanencia = fase(f => f.pos > PLAZAS_TITOL);
+  const titol = fase(true);
+  const permanencia = fase(false);
   return { grupos, titol, permanencia };
 }

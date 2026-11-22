@@ -57,6 +57,16 @@
   .nota { font-size: .84rem; color: var(--suave) }
   .nota ul { margin: 6px 0 0; padding-left: 18px }
   #error { display: none; background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 10px; margin-bottom: 16px }
+  .chk { width: 18px; height: 18px; accent-color: var(--acento); cursor: pointer }
+  .chk:disabled { cursor: not-allowed; opacity: .35 }
+  tr.elegido td { background: #eef2ff }
+  .contador { font-size: .82rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: #dcfce7; color: #166534; margin-left: 6px }
+  .contador.mal { background: #fee2e2; color: #991b1b }
+  .barra { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 12px }
+  button { font: inherit; font-size: .85rem; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--linea); background: #fff; cursor: pointer }
+  button:hover { background: #f3f4f6 }
+  .aviso { background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; padding: 10px 12px; border-radius: 10px; font-size: .9rem }
+  .cambio { color: #b45309; font-weight: 600 }
   footer { text-align: center; font-size: .8rem; color: var(--suave); padding-bottom: 30px }
   footer a { color: var(--acento) }
 </style>
@@ -72,9 +82,15 @@
   <div id="error"></div>
 
   <section class="tarjeta">
-    <h2>🏆 Fase Títol (provisional)</h2>
-    <p class="sub">Los 4 primeros del Grup A y del Grup B, con los puntos arrastrados de los partidos entre ellos. «Orig.» es el grupo y la posición actual en la Primera Fase.</p>
-    <div class="scroll"><table id="t-titol"></table></div>
+    <div class="barra"><div><h2 style="display:inline">1. Primera Fase · elige quién va a Fase Títol</h2></div><button id="reset" type="button">Volver a los 4 primeros</button></div>
+    <p class="sub">Marca 4 equipos de cada grupo en la columna «Títol». Por defecto están marcados los 4 primeros de la clasificación actual. Para cambiar uno, desmarca primero otro. Las clasificaciones de abajo se recalculan solas.</p>
+    <div class="grupos" id="grupos"></div>
+    <p class="sub" id="resumen-cambios" style="margin-top:10px"></p>
+  </section>
+  <section class="tarjeta">
+    <h2>2. 🏆 Fase Títol (provisional)</h2>
+    <p class="sub">Los 4 equipos elegidos de cada grupo, con los puntos arrastrados de los partidos entre ellos. «Orig.» es el grupo y la posición actual en la Primera Fase.</p>
+    <div id="aviso-titol"></div><div class="scroll"><table id="t-titol"></table></div>
     <div class="leyenda"><span class="l-oro">1.º</span><span class="l-plata">2.º</span></div>
     <h3>Partidos pendientes de la Primera Fase entre estos equipos</h3>
     <p class="sub">Todavía sumarán a los puntos arrastrados.</p>
@@ -82,27 +98,21 @@
   </section>
 
   <section class="tarjeta">
-    <h2>🛟 Fase Permanència (provisional)</h2>
-    <p class="sub">Del 5.º al 9.º del Grup A y del 5.º al 8.º del Grup B, con los puntos arrastrados de los partidos entre ellos.</p>
-    <div class="scroll"><table id="t-perm"></table></div>
+    <h2>3. 🛟 Fase Permanència (provisional)</h2>
+    <p class="sub">El resto de equipos (5 del Grup A y 4 del Grup B), con los puntos arrastrados de los partidos entre ellos.</p>
+    <div id="aviso-perm"></div><div class="scroll"><table id="t-perm"></table></div>
     <div class="leyenda"><span class="l-naranja">Descenso compensación</span><span class="l-rojo">Descenso</span></div>
     <h3>Partidos pendientes de la Primera Fase entre estos equipos</h3>
     <p class="sub">Todavía sumarán a los puntos arrastrados.</p>
     <div id="p-perm"></div>
   </section>
 
-  <section class="tarjeta">
-    <h2>Primera Fase · clasificación actual</h2>
-    <p class="sub">La línea discontinua separa los que irían a Fase Títol de los que irían a Fase Permanència.</p>
-    <div class="grupos" id="grupos"></div>
-    <div class="leyenda"><span class="l-titol">Plaza de Fase Títol</span></div>
-  </section>
 
   <section class="tarjeta nota">
     <b>Cómo se calcula</b>
     <ul>
       <li>Victoria 2 puntos, empate 1, derrota 0.</li>
-      <li>Pasan a Fase Títol los 4 primeros de cada grupo; el resto va a Fase Permanència.</li>
+      <li>Pasan a Fase Títol los 4 equipos marcados de cada grupo (por defecto, los 4 primeros); el resto va a Fase Permanència.</li>
       <li>Cada equipo arrastra solo los resultados contra los equipos de su grupo que pasan a su misma fase.</li>
       <li>Desempate a puntos: si los empatados ya han jugado todos sus partidos entre ellos, cuenta el enfrentamiento directo (puntos, diferencia y goles a favor); si no, la diferencia de goles general y luego los goles a favor. Así coincide con la clasificación oficial de iSQUAD.</li>
       <li>Es provisional: los equipos no han jugado todos el mismo número de partidos.</li>
@@ -113,7 +123,7 @@
 <footer>Datos: <a href="https://resultadosbalonmano.isquad.es/maqueta/#v=jornada&s=1&se=0&temp=2627&t=17&am=0&cat=3077&comp=211864" target="_blank" rel="noopener">resultados de la FCH en iSQUAD</a> · se actualizan automáticamente cada 3 horas.</footer>
 
 <script type="module">
-import { calcular, nombre } from './liga.js';
+import { calcular, nombre, PLAZAS_TITOL } from './liga.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -131,9 +141,9 @@ function fechaBonita(f) {
   return s;
 }
 
-function tabla(el, filas, datos, { clase, origen = true }) {
-  el.innerHTML = `<thead><tr><th>#</th><th class="eq">Equipo</th>${origen ? '<th>Orig.</th>' : ''}<th>PJ</th><th>G</th><th>E</th><th>P</th><th class="ocultable">GF</th><th class="ocultable">GC</th><th>DG</th><th>Pts</th></tr></thead><tbody>${
-    filas.map((f, i) => `<tr class="${clase(f, i, filas.length)}"><td class="pos">${f.pos}</td><td class="eq">${esc(nombre(datos, f.id))}</td>${
+function tabla(el, filas, datos, { clase, origen = true, check = null }) {
+  el.innerHTML = `<thead><tr>${check ? '<th>Títol</th>' : ''}<th>#</th><th class="eq">Equipo</th>${origen ? '<th>Orig.</th>' : ''}<th>PJ</th><th>G</th><th>E</th><th>P</th><th class="ocultable">GF</th><th class="ocultable">GC</th><th>DG</th><th>Pts</th></tr></thead><tbody>${
+    filas.map((f, i) => `<tr class="${clase(f, i, filas.length)}">${check ? `<td>${check(f)}</td>` : ''}<td class="pos">${f.pos}</td><td class="eq">${esc(nombre(datos, f.id))}</td>${
       origen ? `<td><span class="orig ${f.grupo}">${f.grupo}${f.posGrupo}</span></td>` : ''
     }<td>${f.pj}</td><td>${f.g}</td><td>${f.e}</td><td>${f.p}</td><td class="ocultable">${f.gf}</td><td class="ocultable">${f.gc}</td><td>${dg(f.dg)}</td><td class="pts">${f.pts}</td></tr>`).join('')
   }</tbody>`;
@@ -147,25 +157,91 @@ function pendientes(el, lista, datos) {
   }</div>`).join('');
 }
 
+// Selección de equipos a Fase Títol: { A: Set, B: Set }. Se guarda en la dirección (#A=id,id&B=id,id)
+let DATOS = null, SEL = {}, DEFECTO = {};
+
+function leerHash() {
+  const q = new URLSearchParams(location.hash.slice(1)), r = {};
+  for (const [k, v] of q) r[k] = new Set(v.split(',').filter(Boolean).map(Number));
+  return r;
+}
+function escribirHash() {
+  const esDefecto = Object.keys(SEL).every(g => SEL[g].size === DEFECTO[g].size && [...SEL[g]].every(id => DEFECTO[g].has(id)));
+  const h = esDefecto ? '' : '#' + Object.keys(SEL).map(g => `${g}=${[...SEL[g]].join(',')}`).join('&');
+  history.replaceState(null, '', location.pathname + location.search + h);
+}
+
+function pintar() {
+  const completo = Object.values(SEL).every(s => s.size === PLAZAS_TITOL);
+  const sel = Object.fromEntries(Object.entries(SEL).map(([g, s]) => [g, [...s]]));
+  const res = calcular(DATOS, sel);
+
+  // 1. Primera Fase con casillas
+  $('#grupos').innerHTML = res.grupos.map(g => {
+    const n = SEL[g.letra].size;
+    return `<div><h3>${esc(g.nombre)} <span class="sub">· ${g.jugados}/${g.total} jugados</span><span class="contador${n === PLAZAS_TITOL ? '' : ' mal'}">${n}/${PLAZAS_TITOL} a Títol</span></h3><div class="scroll"><table id="g-${g.letra}"></table></div></div>`;
+  }).join('');
+  for (const g of res.grupos) {
+    const s = SEL[g.letra], lleno = s.size >= PLAZAS_TITOL;
+    tabla($(`#g-${g.letra}`), g.tabla, DATOS, {
+      origen: false,
+      clase: f => s.has(f.id) ? 'elegido zona-titol' : '',
+      check: f => `<input type="checkbox" class="chk" data-g="${g.letra}" data-id="${f.id}" aria-label="Fase Títol: ${esc(nombre(DATOS, f.id))}"${s.has(f.id) ? ' checked' : ''}${!s.has(f.id) && lleno ? ' disabled' : ''}>`,
+    });
+  }
+  // Resumen de cambios respecto a los 4 primeros
+  const cambios = res.grupos.flatMap(g => {
+    const entran = [...SEL[g.letra]].filter(id => !DEFECTO[g.letra].has(id));
+    const salen = [...DEFECTO[g.letra]].filter(id => !SEL[g.letra].has(id));
+    const t = [];
+    if (entran.length) t.push(`Grup ${g.letra}: entra${entran.length > 1 ? 'n' : ''} ${entran.map(id => esc(nombre(DATOS, id))).join(', ')}`);
+    if (salen.length) t.push(`Grup ${g.letra}: sale${salen.length > 1 ? 'n' : ''} ${salen.map(id => esc(nombre(DATOS, id))).join(', ')}`);
+    return t;
+  });
+  $('#resumen-cambios').innerHTML = cambios.length ? `<span class="cambio">Escenario personalizado</span> · ${cambios.join(' · ')}` : 'Escenario actual: los 4 primeros de cada grupo.';
+
+  // 2 y 3. Nuevas fases
+  const falta = res.grupos.filter(g => SEL[g.letra].size !== PLAZAS_TITOL).map(g => `${g.nombre} (${SEL[g.letra].size}/${PLAZAS_TITOL})`);
+  const aviso = falta.length ? `<p class="aviso">Elige exactamente ${PLAZAS_TITOL} equipos de cada grupo para ver esta clasificación. Falta completar: ${falta.join(', ')}.</p>` : '';
+  $('#aviso-titol').innerHTML = aviso; $('#aviso-perm').innerHTML = aviso;
+  for (const id of ['#t-titol', '#t-perm', '#p-titol', '#p-perm']) $(id).style.display = completo ? '' : 'none';
+  if (completo) {
+    tabla($('#t-titol'), res.titol.tabla, DATOS, { clase: (f, i) => i === 0 ? 'oro' : i === 1 ? 'plata' : '' });
+    tabla($('#t-perm'), res.permanencia.tabla, DATOS, { clase: (f, i, n) => i >= n - 3 ? 'rojo' : i >= n - 5 ? 'naranja' : '' });
+    pendientes($('#p-titol'), res.titol.pendientes, DATOS);
+    pendientes($('#p-perm'), res.permanencia.pendientes, DATOS);
+  }
+}
+
+document.addEventListener('change', e => {
+  const c = e.target.closest('input.chk'); if (!c) return;
+  const s = SEL[c.dataset.g], id = +c.dataset.id;
+  if (c.checked) { if (s.size < PLAZAS_TITOL) s.add(id) } else s.delete(id);
+  escribirHash(); pintar();
+});
+$('#reset').addEventListener('click', () => {
+  for (const g of Object.keys(DEFECTO)) SEL[g] = new Set(DEFECTO[g]);
+  escribirHash(); pintar();
+});
+
 async function iniciar() {
   try {
     const r = await fetch(`data/partidos.json?t=${Date.now()}`, { cache: 'no-store' });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const datos = await r.json();
-    const res = calcular(datos);
+    DATOS = await r.json();
+    const base = calcular(DATOS);
 
-    const act = new Date(datos.actualizado);
+    const act = new Date(DATOS.actualizado);
     $('#actualizado').textContent = `Datos actualizados: ${act.toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Europe/Madrid' })} · ` +
-      res.grupos.map(g => `${g.nombre}: ${g.jugados}/${g.total} partidos jugados`).join(' · ');
+      base.grupos.map(g => `${g.nombre}: ${g.jugados}/${g.total} partidos jugados`).join(' · ');
 
-    tabla($('#t-titol'), res.titol.tabla, datos, { clase: (f, i) => i === 0 ? 'oro' : i === 1 ? 'plata' : '' });
-    tabla($('#t-perm'), res.permanencia.tabla, datos, { clase: (f, i, n) => i >= n - 3 ? 'rojo' : i >= n - 5 ? 'naranja' : '' });
-    pendientes($('#p-titol'), res.titol.pendientes, datos);
-    pendientes($('#p-perm'), res.permanencia.pendientes, datos);
-
-    $('#grupos').innerHTML = res.grupos.map(g => `<div><h3>${esc(g.nombre)} <span class="sub">· ${g.jugados}/${g.total} jugados</span></h3><div class="scroll"><table id="g-${g.letra}"></table></div></div>`).join('');
-    for (const g of res.grupos)
-      tabla($(`#g-${g.letra}`), g.tabla, datos, { origen: false, clase: f => (f.pos <= 4 ? 'zona-titol' : '') + (f.pos === 4 ? ' corte' : '') });
+    const hash = leerHash();
+    for (const g of base.grupos) {
+      DEFECTO[g.letra] = new Set(g.tabla.filter(f => f.pos <= PLAZAS_TITOL).map(f => f.id));
+      const desdeHash = hash[g.letra] && [...hash[g.letra]].filter(id => g.tabla.some(f => f.id === id)).slice(0, PLAZAS_TITOL);
+      SEL[g.letra] = new Set(desdeHash && desdeHash.length ? desdeHash : DEFECTO[g.letra]);
+    }
+    pintar();
   } catch (e) {
     $('#error').style.display = 'block';
     $('#error').textContent = 'No he podido cargar los datos (' + e.message + ').';
