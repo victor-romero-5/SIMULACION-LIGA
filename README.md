@@ -12,5 +12,5 @@ Simulación provisional de la segunda fase de la **Lliga Catalana Or Sènior Mas
 - Victoria 2, empate 1, derrota 0.
 - Pasan a Fase Títol los 4 primeros de cada grupo; el resto (5.º–9.º del A y 5.º–8.º del B) a Fase Permanència.
 - Se arrastran solo los resultados contra los equipos del mismo grupo que pasan a la misma fase.
-- Fase Títol: 1.º en oro, 2.º en plata. Fase Permanència: 3 últimos en rojo, los 2 anteriores en naranja.
+- Fase Títol: 1.º en oro, 2.º en plata. Fase Permanència: descenso (3 últimos) en rojo y descenso compensación (los 2 anteriores) en naranja.
 - Desempate: enfrentamiento directo si ya se han jugado todos los partidos entre los empatados; si no, diferencia de goles general y goles a favor.
