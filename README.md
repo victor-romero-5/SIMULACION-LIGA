@@ -5,7 +5,7 @@ Simulación provisional de la segunda fase de la **Lliga Catalana Or Sènior Mas
 - `index.html` + `liga.js`: la web (GitHub Pages).
 - `data/partidos.json`: resultados de la Primera Fase (Grup A y Grup B).
 - `scripts/actualizar.mjs`: descarga los resultados de la API de [resultados de iSQUAD](https://resultadosbalonmano.isquad.es/maqueta/#v=jornada&s=1&se=0&temp=2627&t=17&am=0&cat=3077&comp=211864).
-- `.github/workflows/actualizar.yml`: lo ejecuta cada 3 horas (y a mano desde la pestaña *Actions → Actualizar resultados → Run workflow*).
+- Para actualizar los datos: ejecutar `node scripts/actualizar.mjs` desde un ordenador propio (Node 18 o superior) y subir `data/partidos.json`. Desde los servidores de GitHub no funciona: iSQUAD les responde 403.
 
 ## Reglas que aplica
 
